@@ -1,0 +1,34 @@
+[data.columns]
+Time = datetime
+Trading Price - $/MWh = price
+Temperature - C = temperature
+Exports - MW = exports
+Imports - MW = imports
+Wind - MW = wind,onshore
+Solar (Rooftop) - MW = solar,rooftop
+Distillate - MW = diesel
+Gas (CCGT) - MW = gas,CCGT
+Gas (OCGT) - MW = gas,OCGT
+Gas (Steam) - MW = gas,steam
+Battery (Discharging) - MW = battery,discharging
+Battery (Charging) - MW = battery,charging
+
+[general]
+filetype = csv
+dbname = whtr.csv
+title = South Australia ~ %A %b %-d, %Y
+shortname = SA
+aggregate = wind
+
+[data.processed]
+
+[data.customised]
+exports = wind,onshore
+
+[cmd.customised.01]
+type = correlate
+descriptor = Correlation plot: wind examples
+base = wind
+dependent = solar,rooftop|imports|exports
+style = third
+
