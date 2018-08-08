@@ -9,3 +9,6 @@ Good luck (that's what works in a linux environment... not sure how Windows inst
 
 Also, tested on a Debian stable machine.  So other operating systems could easily have issues.  Runs off Python3 (& pandas), with rpy2 and obviously R.
 More details to follow soon...
+
+Pro-tip(s):
+ * on first usage the .whtr config file will (likely) be overwritten, thus losing any of the commented out configurations. Make a copy.
