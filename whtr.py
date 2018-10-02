@@ -26,6 +26,7 @@ def select(options, allowMulti=False):
                 if values[0].active():
                     return values[0]
                 else:   #~todo~ maybe clear & re-print screen?
+                    print("Inactive option, please select other")
                     continue
         except (ValueError, IndexError):
             print("Invalid input, please try again")
