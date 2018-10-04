@@ -11,6 +11,14 @@ Also, tested on a Debian stable machine.  So other operating systems could easil
 More details to follow soon...
 
 ### So what is whtr?
+A toolset to help make clear & unambiguous information about electricity market data easy to generate.  The basic design is to setup one or more subdirectories containing this data in raw form, and an easily configurable file (.whtr) to drive a menu of options that generate the required diagrams capturing the essential information in the data. These diagrams are:
+ * Load Duration Curves - the primary tool, about as complete a description as a single plot can be
+ * Correlation plots - both within the current subdirectory, & between subdirectories
+ * Boxplots - for a simple view on the distribution of generation types
+ * Timeseries - time plot of generation output with configurable display options
+ * CO₂ intensity plots - transformation of the time plot so that its CO₂ emissions can be viewed
+It is this final diagram that is the whole point in the end.  Climate change is real.  The carbon emissions of the electricity sector and obtaining deep decarbonisation results is critical in averting truly dire consequences.  Without it, all other efforts lose any real meaning.  And the wider public has become increasingly aware of this, especially on #EnergyTwitter.  So now that public need to be properly informed, so that they can make wise decisions.
+This is where the Load Duration Curve comes in.
 
 ### No… whtr?
 Indeed.
