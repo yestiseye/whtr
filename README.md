@@ -1,6 +1,12 @@
 # whtr
 > "Use the load duration curve Luke"
 
+#### right, let's just dive in ok?
+###### *(These are the steps required on a [stable Debian o/s: currently "Stretch"](https://wiki.debian.org/DebianStable), & thus generally any other linux variant. Given that particular o/s deliberately stays 2 or 3 steps behind the bleeding edge, other non-linux systems should not have a problem other than weird quirks …yes, looking at you Windows)*
+
+In a command line terminal, navigate to the location you want to install &
+'cmd here'
+
 So a first, fairly limited functionality, version of the code.  The Load Duration Curve method is currently deactivated (because it is a mess right now... look if you dare).  Given this is half the reason whtr exists, this situation won't remain so for very long... ;-)  The other half of the reason, Simulated Scenarios, isn't even in the code yet. :-(
 But the bare bones is there.
 
