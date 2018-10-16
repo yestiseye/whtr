@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#~todo~ make sure on upgrade that subdirectories are not overwritten or deleted
 
 from common import load_root_node
 

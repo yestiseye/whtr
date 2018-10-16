@@ -36,6 +36,7 @@ class Node(object):
     def fill_children(self):
         pass
 
+
 class DirNode(Node):
     def __init__(self, newdir, filelist, parent):
         Node.__init__(self, newdir[2:], parent)
@@ -95,10 +96,12 @@ class DirNode(Node):
         # 4) time profile
         gen_command("timeplot", self, create_cmdnode)
         # 5) load duration curve
-        #~todo~ this code is a mess, leave it out for now
-#        gen_command("ldc", self, create_cmdnode)
+        gen_command("cohtoo", self, create_cmdnode)
         # 6) boxplots
-        gen_command("boxplot", self, create_cmdnode)
+        gen_command("ldc", self, create_cmdnode)
+        # 7) boxplots
+        gen_command("boxplot", self, create_cmdnode,
+                    custname="Boxplots\n------------------------------")
         # X) populate customised command set
         cmdset = sorted([s for s in cfg.sections()
                         if s.startswith("cmd.customised")])
@@ -109,6 +112,7 @@ class DirNode(Node):
                                   customcmd['descriptor'])
             #override the customdata array
             cmdnode.customdata = customcmd
+
 
 class CmdNode(Node):
     def __init__(self, title, parent, status=None, *cmdlist):
@@ -132,6 +136,7 @@ class CmdNode(Node):
             return self.checkactive()
         else:
             return True
+
 
 # do this to bypass the whole import of class imbroglio
 def create_cmdnode(title, parent, status=None, *cmdlist):
