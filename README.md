@@ -2,19 +2,19 @@
 > "Use the load duration curve Luke"
 
 #### right, let's just dive in ok?
-<sub><sup>*(These are the steps required on a [stable Debian o/s: currently "Stretch"](https://wiki.debian.org/DebianStable), & thus generally any other linux variant. Given that particular o/s deliberately stays 2 or 3 steps behind the bleeding edge, other non-linux systems should not have a problem other than weird quirks …yes, looking at you Windows)*</sup></sub>
+<sub><sup>*(These are the steps required on a [stable Debian o/s: currently "Stretch"](https://wiki.debian.org/DebianStable), & thus generally any other linux variant.  Given that particular o/s deliberately stays 2 or 3 steps behind the bleeding edge, other non-linux systems should not have a problem other than weird quirks …yes, looking at you Windows)*</sup></sub>
 
-In a command line terminal, navigate to the location you want to install &
+In a command line terminal, navigate to the location you want to [install]((https://git-scm.com/docs/git-clone)) &
 
-```cmd here```
+```git clone git://github.com/yestiseye/whtr```
 
-With the code now installed on your system, change into the whtr directory &
+With the code now installed on your system, change into the new whtr directory &
 
-```./whtr.py```
+```./whtr.py```https://git-scm.com/book/en/v2/Getting-Started-The-Command-Line
 
-<sub><sup>*(anyone more familiar with git & python will have their own flavours on doing the same, but for those new to this above is the easiest way to get up & running)*</sup></sub>
+<sub><sup>*(anyone more familiar with git & python will have their own flavours on doing the same, but for those new to this, above is the easiest way to get up & running)*</sup></sub>
 
-And you are up & running. Alt for windows etc???
+And you are up & running.  This clearly is useful only to linux users, so for the rest of you my recommendation is [install git](https://gist.github.com/derhuerst/1b15ff4652a867391f03) and then use the [relevant equivalent steps](https://git-scm.com/book/en/v2/Getting-Started-The-Command-Line) for your o/s.
 obviously you'll need to have the prerequistes installed for it to actually work, and these are listed below with the relevant Debian packages as well.  Stuff is going to go wrong, especially on other o/ses, but that's why β-testing was invented :wink:  Log it as an issue; use the β-testing tag.
 
 Python 3
