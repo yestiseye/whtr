@@ -2,10 +2,24 @@
 > "Use the load duration curve Luke"
 
 #### right, let's just dive in ok?
-###### *(These are the steps required on a [stable Debian o/s: currently "Stretch"](https://wiki.debian.org/DebianStable), & thus generally any other linux variant. Given that particular o/s deliberately stays 2 or 3 steps behind the bleeding edge, other non-linux systems should not have a problem other than weird quirks …yes, looking at you Windows)*
+<sub><sup>*(These are the steps required on a [stable Debian o/s: currently "Stretch"](https://wiki.debian.org/DebianStable), & thus generally any other linux variant. Given that particular o/s deliberately stays 2 or 3 steps behind the bleeding edge, other non-linux systems should not have a problem other than weird quirks …yes, looking at you Windows)*</sup></sub>
 
 In a command line terminal, navigate to the location you want to install &
-'cmd here'
+
+```cmd here```
+
+With the code now installed on your system, change into the whtr directory &
+
+```./whtr.py```
+
+<sub><sup>*(anyone more familiar with git & python will have their own flavours on doing the same, but for those new to this above is the easiest way to get up & running)*</sup></sub>
+
+And you are up & running. Alt for windows etc???
+obviously you'll need to have the prerequistes installed for it to actually work, and these are listed below with the relevant Debian packages as well.  Stuff is going to go wrong, especially on other o/ses, but that's why β-testing was invented :wink:  Log it as an issue; use the β-testing tag.
+
+Python 3
+R
+rpy2
 
 So a first, fairly limited functionality, version of the code.  The Load Duration Curve method is currently deactivated (because it is a mess right now... look if you dare).  Given this is half the reason whtr exists, this situation won't remain so for very long... ;-)  The other half of the reason, Simulated Scenarios, isn't even in the code yet. :-(
 But the bare bones is there.
