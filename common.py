@@ -1,6 +1,6 @@
 import os
 from constants import load_config
-from dataproc import gen_command, range_selected, loaddata
+from dataproc import gen_command, range_selected, loaddata, reset
 
 
 cache = "__pycache__"
@@ -55,12 +55,16 @@ class DirNode(Node):
         else:
             self.preamble = range_selected()   #~todo~ redundant?
             #~todo~ could potentially check for updated filelist
+        # (re-)load configuration
+        print("...loading config")
+        load_config(configFile)
         return self
 
     def onexit(self):
         os.chdir("..")
         firstRun = True   #reset
-        #~todo~ probably should clear all dataframes, etc here too
+        # clear all dataframes, etc here
+        reset()
 
     def fill_children(self):
         if configFile in self.filelist:
@@ -78,7 +82,8 @@ class DirNode(Node):
         self.preamble = range_selected()
         #detect if unprocessed data present (& leave in filelist)
         self.filelist[:] = [x for x in sorted(self.filelist)
-                              if x.endswith(cfg['general']['filetype'])]
+                              if x.endswith(cfg['general']['filetype'])
+                              and not x.startswith("co2")]
         previousData = dict(cfg['data.processed'])
         if 'files' in previousData:
             prevFiles = previousData.get('files').split(",")

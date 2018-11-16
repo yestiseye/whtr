@@ -96,6 +96,9 @@ config.optionxform = str   #preserve case
 
 def load_config(source):
     global titleTemplate
+    #clear any existing config data (except default section)
+    config.clear()
+    #now read data
     config.read_file(open(source))
     #note https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read
     #will cumulatively load several config files...
@@ -148,6 +151,8 @@ def getBool(hashdata={}, keydata=None, section=None, default=False):
         data = config[section].get(keydata, None)
     if data is None:
         return default
+    elif isinstance(data, bool):
+        return data
     return data.lower() in ('true', 'yes', 'on', 't', '1')
 
 def flatish(filterlist, sourcelist=GEN_LIST, keepStructure=False,
