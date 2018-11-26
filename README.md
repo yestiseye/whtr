@@ -12,6 +12,10 @@ With the code now installed on your system, change into the new whtr directory &
 
 ```./whtr.py```
 
+...though you might first need to,
+
+```chmod a+x whtr.py```
+
 <sub><sup>*(anyone more familiar with git & python will have their own flavours on doing the same, but for those new to this, above is the easiest way to get up & running)*</sup></sub>
 
 And you are up & running.  These instructions are clearly biased towards linux users, so for the rest of you my recommendation is [install git](https://www.atlassian.com/git/tutorials/install-git) and then use the [relevant equivalent steps](https://git-scm.com/book/en/v2/Getting-Started-The-Command-Line) for your o/s.
