@@ -17,6 +17,7 @@ Battery (Charging) - MW : battery,charging
 filetype : csv
 dbname : whtr.csv
 title : South Australia ~ %A %b %-d, %Y
+#note: %-d will have problems on Windows (need to use %#d)
 shortname : SA
 aggregate : wind
 #smartparse : True
