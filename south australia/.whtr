@@ -1,34 +1,75 @@
 [data.columns]
-Time = datetime
-Trading Price - $/MWh = price
-Temperature - C = temperature
-Exports - MW = exports
-Imports - MW = imports
-Wind - MW = wind,onshore
-Solar (Rooftop) - MW = solar,rooftop
-Distillate - MW = diesel
-Gas (CCGT) - MW = gas,CCGT
-Gas (OCGT) - MW = gas,OCGT
-Gas (Steam) - MW = gas,steam
-Battery (Discharging) - MW = battery,discharging
-Battery (Charging) - MW = battery,charging
+Time : datetime
+Trading Price - $/MWh : price
+Temperature - C : temperature
+Exports - MW : exports
+Imports - MW : imports
+Wind - MW : wind,onshore
+Solar (Rooftop) - MW : solar,rooftop
+Distillate - MW : diesel
+Gas (CCGT) - MW : gas,CCGT
+Gas (OCGT) - MW : gas,OCGT
+Gas (Steam) - MW : gas,steam
+Battery (Discharging) - MW : battery,discharging
+Battery (Charging) - MW : battery,charging
 
 [general]
-filetype = csv
-dbname = whtr.csv
-title = South Australia ~ %A %b %-d, %Y
-shortname = SA
-aggregate = wind
+filetype : csv
+dbname : whtr.csv
+title : South Australia ~ %A %b %-d, %Y
+shortname : SA
+aggregate : wind
+#smartparse : True
+#dateformat : %Y-%m-%d %H:%M:%S
+#slimshade : False
+#backfill : False
+#expoz : True
 
 [data.processed]
 
 [data.customised]
-exports = wind,onshore
+exports : wind,onshore
 
 [cmd.customised.01]
-type = correlate
-descriptor = Correlation plot: wind examples
-base = wind
-dependent = solar,rooftop|imports|exports
-style = third
+type : correlate
+descriptor : Correlation plot: wind examples
+base : wind
+dependent : solar,rooftop|imports|exports
+#nonlocal : victoria
+#dotplot : False
+#savedata : True
+#style : basic|contour|shade
+style : third
 
+[cmd.customised.02]
+type : boxplot
+descriptor : Boxplots of interest
+mods : showmin
+filter : gas,CCGT & steam[gas,CCGT+gas,steam]|wind|exports|imports
+
+[cmd.customised.03]
+type : ldc
+descriptor : Load Duration Curve(*special*)
+#onlyraw: True
+label: baseload|peak|delta
+#shading : False
+plotDetail : rezdetail
+
+[cmd.customised.04]
+type : timeplot
+descriptor : Show data as 'Dispatchable'
+bedrock : group
+#aggregate : gas|renewables
+
+[cmd.customised.05]
+type : sim
+descriptor : +25% wind +150% solar simulation
+model : wind|0.25|solar,rooftop|1.5
+meritorder : diesel|imports|gas,OCGT|gas,steam|gas,CCGT
+inertia : 220
+
+#[cmd.customised.06]
+#type : cohtoo
+#descriptor : Full CO₂ intensity
+#aggregate : H
+#nonlocal : victoria
