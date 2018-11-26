@@ -3,7 +3,7 @@ from constants import load_config
 from dataproc import gen_command, range_selected, loaddata, reset
 
 
-cache = "__pycache__"
+cache = ["__pycache__", ".git"]
 configFile = ".whtr"
 
 class Node(object):
@@ -156,7 +156,7 @@ def load_root_node():
             subdirs.clear()   #don't go beyond first subdirectory level
             DirNode(dirName, files[:], root_node)
         else:
-            if cache in subdirs:
-                subdirs.remove(cache)   #whtr code in base directory
+            subdirs[:] = [x for x in subdirs if x not in cache]
+            #ignore whtr code in base directory & .git directory
             firstSublevel = True
     return root_node

@@ -364,13 +364,19 @@ def ldc(nonstandard=None):
                             yto.append( line[width-1] )
                 elif (i < maxpoint):   #even, but reaches sides
                     # <quick patch -starts->
-                    if (len(bottomx) == 1):
-                        xfrom.append(bottomx[0] + 1)
-                        yfrom.append( bottom[bottomx[0]] )
+                    if (len(bottomx) != 0):
+                        for multipt in range(0, len(bottomx)-1, 2):
+                            xfrom.append(bottomx[multipt] + 1)
+                            xto.append(bottomx[multipt + 1] + 1)
+                            yfrom.append( bottom[bottomx[multipt]] )
+                            yto.append( bottom[bottomx[multipt + 1]] )
+                        xfrom.append(bottomx[len(bottomx)-1] + 1)
+                        yfrom.append( bottom[bottomx[len(bottomx)-1]] )
                     else:
                     # <quick patch -ends->
                         xfrom.append(width)
                         yfrom.append( line[width-1] )
+#                print("!", i, maxpoint, len(topx), len(bottomx))
                 continue
             if (len(bottomx) == 0):
                 xfrom.append(1)
@@ -511,11 +517,12 @@ def ldc(nonstandard=None):
                 difference += np.where(ldf[delta].isnull(), 0,
                                        ldf[delta] - ldf[delta[:-9]])
                 #note that this is the delta that pushes adjusted curve down
+#        print(("pro-rata","adjusted")[adjldf])
         if adjldf:
             adjldf = not onlyraw   #calculate, but switch off if not requested
             if nonhydro:
                 ldf['adjusted'] = ldf[cfg.COL_TOTAL] - difference \
-                                                    - ldf[nonhydro].sum(axis=1)
+                                          - ldf[nonhydro].sum(axis=1).fillna(0)
             else:   #all renewables were adjusted
                 ldf['adjusted'] = ldf[cfg.COL_TOTAL] - difference
             ldf.sort_values(by='adjusted', ascending=False, inplace=True)
@@ -852,17 +859,21 @@ def correlate(nonstandard=None):
     corr_dep = 'imports'
     params_other = []
     loc_list = []
+    plot_list = []   #default when not in use
     plotType = 'basic'
     plotIndex = 0
     dotplot = True
     pricing = False
     logscale = False
+    keepdata = False
     plotSubTitle = 'correlation plot'
     if nonstandard:
         corr_base = nonstandard['base']
         params = [corr_base, cfg.COL_TOTAL]
         if 'nonlocal' in nonstandard:
             #assume just the one type of plot required
+            #~todo~ allow different variations of the same data to be generated
+            #...together
             plotType = list(nonstandard['style'].split("|"))[0]
             #load in the non-local information
             loc_list = list(nonstandard['nonlocal'].split("|"))
@@ -876,6 +887,7 @@ def correlate(nonstandard=None):
             #~todo~ really should check no duplicates exist, & all sorts of
             #other error checking
         dotplot = cfg.getBool(nonstandard, 'dotplot', default=True)
+        keepdata = cfg.getBool(nonstandard, 'savedata')
         if 'thirdvar' in nonstandard:
             pricing = nonstandard['thirdvar'].startswith("price")
             logscale = (nonstandard['thirdvar'] == "pricelog")
@@ -897,7 +909,6 @@ def correlate(nonstandard=None):
     if params_other:   #load data, then add to correlf
         if len(loc_list) == 1:
             nonlocdf = loaddata(loc_list[0], altdf=True)
-            print(nonlocdf.shortname)
             #~todo~ handle case if the shortname is null
             for x in params_other:
                 newname = x + '_' + nonlocdf.shortname
@@ -910,7 +921,7 @@ def correlate(nonstandard=None):
         else:
             corr_deplist = []
             for locale in loc_list:
-                nonlocdf = loaddata(loc_list[0], altdf=True)
+                nonlocdf = loaddata(locale, altdf=True)
                 newname = params_other[0] + '_' + nonlocdf.shortname
                 if dateRange:
                     correlf[newname] = \
@@ -919,6 +930,9 @@ def correlate(nonstandard=None):
                     correlf[newname] = df[params_other[0]]
                 corr_deplist.append(newname)
     doData = True
+    if keepdata:
+        print("...saving raw data as correlation.csv")
+        correlf.to_csv('correlation.csv', sep=';')
 
     # now plot
     activate_r(correlf)
@@ -941,14 +955,16 @@ def correlate(nonstandard=None):
             else:
                 break
             #also track if dependant variable is nonlocal
+            thepwd = os.getcwd()
+            thepwd = thepwd[thepwd.rfind('/')+1:]
             if len(loc_list) > plotIndex:
                 plotSubTitle = 'correlation plot: {}({}) vs {}({})'.format(
-                    cfg.nicetype(corr_base), os.getcwd(),
+                    cfg.nicetype(corr_base), thepwd,
                     cfg.nicetype(corr_dep[:corr_dep.rfind('_')]),
                     loc_list[plotIndex])
             elif len(loc_list) == 1:
                 plotSubTitle = 'correlation plot: {}({}) vs {}({})'.format(
-                    cfg.nicetype(corr_base), os.getcwd(),
+                    cfg.nicetype(corr_base), thepwd,
                     cfg.nicetype(corr_dep[:corr_dep.rfind('_')]), loc_list[0])
             plotIndex += 1
         else:
@@ -1145,6 +1161,7 @@ def timeseries(nonstandard=None):
 #~todo~ make plot width bigger, and configurable
     aggdata()
     dabase = None
+    showraw = False
     flipneg = True
     co2profile = False
     plotCusTitle = ""
@@ -1157,8 +1174,9 @@ def timeseries(nonstandard=None):
     #make a copy of the original data
     if nonstandard and 'dataframe' in nonstandard:
         timedf = nonstandard['dataframe'].copy()
+        showraw = cfg.getBool(nonstandard, 'keepraw')
         droplist = [cfg.COL_TEMP, cfg.COL_PRICE]
-        if any(x.endswith('adjusted') for x in list(timedf)):
+        if any(x.endswith('adjusted') for x in list(timedf)) or showraw:
             droplist.append(cfg.COL_TOTAL)
         timedf.drop(labels=droplist, axis=1, inplace=True, errors='ignore')
         #reset params
@@ -1171,11 +1189,12 @@ def timeseries(nonstandard=None):
         timedf = df[params].copy()
     #consolidate adjusted data
     adjust = [x for x in params if x.endswith('adjusted')]
+#    print(("pro-rata", "adjusted")[len(adjust) != 0])
     if adjust:
         for x in adjust:
             timedf[x[:-9]] = timedf[x].fillna(timedf[x[:-9]])
         timedf.drop(labels=adjust, axis=1, inplace=True, errors='ignore')
-    else:
+    elif not showraw:
         negatives = list(cfg.flatish(list(timedf),
                     [cfg.COL_EXPORT, cfg.COL_BATT_CHG, cfg.COL_PUMPHYDRO_CHG]))
         negdel = timedf[negatives].sum(axis=1)
@@ -1264,6 +1283,7 @@ def co2intensity(nonstandard=None):
 #~todo~ option to show bulk carbon emissions instead
 #~todo~ option to group by energy type & use generic intensity value
     showtrend = True
+    reperiod = False
     aggdata()
     #filter both intensity hash & dataframe
     #note that export, total & storage charging all absent from this hash
@@ -1273,14 +1293,18 @@ def co2intensity(nonstandard=None):
     match.extend([x for x in list(df) if x[:-9] in match
                                         and x.endswith('adjusted')])
     if nonstandard:
-        rawdata = list(nonstandard['cohtoo'].split("|"))
-        if len(rawdata) == 0 or len(rawdata) % 2 != 0:
+        rawdata = list(filter(bool, nonstandard.get('cohtoo', '').split("|")))
+        if len(rawdata) == 0:
+            pass
+        elif len(rawdata) % 2 != 0:
             print("...CO₂ emissions config bad, exiting.")
             return
         #override default emissions intensities
         for (gentype, value) in pairwise(rawdata):
             modcto[gentype] = value
         showtrend = cfg.getBool(nonstandard, 'showtrend', default=True)
+        if 'aggregate' in nonstandard:
+            reperiod = nonstandard['aggregate']
         #imported emissions is simple single source for now
         #~todo~ enhance external emissions sourcing
         if 'nonlocal' in nonstandard:
@@ -1296,12 +1320,15 @@ def co2intensity(nonstandard=None):
         imQuant = codf[cfg.COL_IMPORT].replace(0, np.nan)
         codf.drop(labels=[cfg.COL_IMPORT], axis=1,inplace=True,errors='ignore')
         modcto.pop(cfg.COL_IMPORT)
+        match.remove(cfg.COL_IMPORT)
         #source import CO₂ intensity i.e. 'internal co2' of source
         #~todo~ should check actually exporting from this source at relevant
         #times?
         #~todo~ retrieve actual imported intensity data, & error handling
 #        cotherdf = pd.read_csv('../{}/co2.csv'.format(importdata), sep=';')
         #test for datetime index overlap (or not)
+#        endpts = dateRange
+#        print(len(dateRange))
 #        endpts = ((codf.index[0], codf.index[-1]), dateRange)[dateRange]
 #        if all(x in cotherdf.index for x in endpts):
 #            external = cotherdf['internal co2'][endpts[0]:endpts[1]]
@@ -1311,11 +1338,11 @@ def co2intensity(nonstandard=None):
 #            if intervals:
 #                print("...existing frequency:", intervals)
 #            ix = pd.DatetimeIndex(start=endpts[0], end=endpts[1],
+#                                  freq='5T')
 #                                  freq=intervals)
 #            codfredex = codf['internal co2'].reindex(ix, fill_value=average)
 #            print("...incomplete CO₂ intensity data from {}, so where not " \
 #            "available using default: {:,.1f}g/kWh".format(importdata,average))
-        
         
         external = [900] * len(imQuant)
     else:
@@ -1344,7 +1371,10 @@ def co2intensity(nonstandard=None):
         codf['exported emissions'] = exco2.replace(0, np.nan)
         codf['exported bulk'] = exbulk.replace(0, np.nan)
         codf['exported co2'] = (exco2 / exbulk).replace(0, np.nan)
+    codf[match] = codf[match].fillna(0)   #zero out non-data
     codf['emissions'] = codf[match].dot( pd.Series(modcto) )
+#    testnan = codf['emissions'].isnull()
+#    print(codf[testnan])
     codf['bulk'] = codf[match].sum(axis=1)   #i.e. the total MegaWatts
     #then divide by what is: total +...
     #(+ exports + storage charging ...unless 'adjusted')
@@ -1353,7 +1383,7 @@ def co2intensity(nonstandard=None):
     codf.drop(labels=match, axis=1, inplace=True, errors='ignore')
     if importdata:
         #put import data back in dataframe
-        codf['imported co2'] = external.replace(0, np.nan)
+        codf['imported co2'] = [0 if np.isnan(e) else e for e in external]
         codf['imported emissions'] = imQuant*external
         codf['imported bulk'] = imQuant
         #save copy of internals
@@ -1374,8 +1404,14 @@ def co2intensity(nonstandard=None):
         except WindowsError:
             os.remove("co2-prev.csv")
             os.rename("co2.csv", "co2-prev.csv")
+    print("...writing emissions data to co2.csv")
     codf.to_csv("co2.csv", sep=';')
 
+    #aggregate time series data, if required
+    #~todo~ investigate use of dplyr package for future use
+#    reperiod = 'D'
+    if reperiod:
+        codf = codf.resample(reperiod).mean()
     #de-index the time data
     codf.reset_index(inplace=True)
     #do plotting
@@ -1482,6 +1518,7 @@ def simulation(nonstandard=None):
         #~todo~ could automatically determine the minimum inertia required
         inertia = float(nonstandard.get('inertia', 0))
         #allow for timeseries plot to be skipped (esp for long time period)
+        #also skip detailed residual breakdown with this flag
         showtime = cfg.getBool(nonstandard, 'showtime', default=True)
     else:
         print("...no configuration data, exiting.")
@@ -1538,6 +1575,8 @@ def simulation(nonstandard=None):
                      'ceeohtoo': True} )
     #...also run load duration curves
     print("...and load duration curve info")
+#    print(list(simdf))
+#    print(simdf.head())
     ldc( {'dataframe': simdf, 'custitle': modelTitle} )
     #~todo~ should start including generation of residual breakdown once robust
     ###
@@ -1572,7 +1611,7 @@ def simulation(nonstandard=None):
     if (gap < 0).any():
         print("warning: attempting to discharge when not required...")
         gapcrit = gap < 0
-#        print(simdf[gapcrit])
+#        print(gap[gapcrit])
         gap[gapcrit] = 0   #clear these cases to keep it simple
     #...and if sufficient storage is available
     print("...attempting simple discharge")
@@ -1599,21 +1638,26 @@ def simulation(nonstandard=None):
         leftovers = rebalance(simdf['temp'], prorata)
         simdf.drop(labels=['temp'], axis=1, inplace=True, errors='ignore')
         simdf[cfg.COL_BATT_DIS] -= leftovers
-        if any(leftovers):   #modified during rebalancing
-            reover = chgfactor * (leftovers - retry)
-            simdf['energysilo'] += reover.cumsum()
-        else:
-            reover = chgfactor * np.asarray(retry)
-            simdf['energysilo'] -= reover.cumsum()
+#        if any(leftovers):   #modified during rebalancing
+#            reover = chgfactor * (leftovers - retry)
+#            simdf['energysilo'] += reover.cumsum()
+#        else:
+#            reover = chgfactor * np.asarray(retry)
+#            simdf['energysilo'] -= reover.cumsum()
+        #~todo~ work out later why here(& below) doesn't accumulate properly
+        #when leftovers are non-zero
+        reover = chgfactor * np.asarray(retry)
+        simdf['energysilo'] -= reover.cumsum()
     else:
         simdf[cfg.COL_BATT_DIS] += gap
         leftovers = rebalance(gap, prorata)
         simdf[cfg.COL_BATT_DIS] -= leftovers
-        if any(leftovers):   #modified during rebalancing
-            lefthours = chgfactor * leftovers
-            simdf['energysilo'] = firstry + lefthours.cumsum()
-        else:
-            simdf['energysilo'] = firstry
+#        if any(leftovers):   #modified during rebalancing
+#            lefthours = chgfactor * leftovers
+#            simdf['energysilo'] = firstry + lefthours.cumsum()
+#        else:
+#            simdf['energysilo'] = firstry
+        simdf['energysilo'] = firstry
     # again display current mix
     #...and sanity check against actual total demand
     storedf = simdf[['energysilo']].copy()
@@ -1622,18 +1666,27 @@ def simulation(nonstandard=None):
     simdf.drop(labels=['energysilo'], axis=1, inplace=True, errors='ignore')
     testot()
     print("...energy mix with storage in effect:")
+#    print(list(simdf))
     if showtime:
         timeseries( {'dataframe': simdf, 'custitle': modelTitle,
                      'ceeohtoo': True} )
     print("...and load duration curve info")
-    ldc( {'dataframe': simdf, 'plotDetail': 'rezdetail', 'energy': 'True',
-          'custitle': modelTitle + " + storage"} )
+    if showtime:
+        ldc( {'dataframe': simdf, 'plotDetail': 'rezdetail', 'energy': 'True',
+              'custitle': modelTitle + " + storage"} )
+    else:
+        ldc( {'dataframe': simdf, 'energy': 'True',
+              'custitle': modelTitle + " + storage"} )
     #...and redo this time with charging data included
     print("...energy mix including battery charging data:")
     simdf[cfg.COL_BATT_CHG] -= tocharging   #note: -ve in the data
+    #~todo~ note this will be plotted *slightly* inaccurately because
+    #pre-existing battery storage(& pumped hydro) will not be balanced
+    #...exports however have been zeroed out here.
+#    print(list(simdf))
     if showtime:
         timeseries( {'dataframe': simdf, 'custitle': modelTitle,
-                     'flipneg': 'off', 'ceeohtoo': True} )
+                     'keepraw': True, 'ceeohtoo': True} )
 
     # finally, show profile of battery dis/charge
     activate_r(storedf)
@@ -1674,7 +1727,7 @@ def simulation(nonstandard=None):
     when = storedf[cfg.COL_TIMESTAMP][stordex]
     (quantity, scaletype) = scalenquant(abs(value * 60/cfg.timeUnit))
     value = storedf['energysilo'][stordex]
-    pp += r('annotate("text", label="italic(\\"-{:,.2f}{}\\")", hjust=0.2, ' \
+    pp += r('annotate("text", label="italic(\\"-{:,.2f}{}\\")", hjust=0.5, ' \
             'vjust=-0.5, x=as.POSIXct("{}"), y={}, colour="slateblue", ' \
             'parse="True")'.format(quantity, scaletype, when, value))
     pp += r('annotate("point", x=as.POSIXct("{}"), y={}, ' \
@@ -1809,6 +1862,11 @@ def load_csv(datasource):
                 xiport = True
             else:
                 print("!!! handling export data as +ve?")
+        #also for pumped hydro!!! (New South Wales)
+        if value == cfg.COL_PUMPHYDRO_CHG:
+            if cfg.getBool(keydata='expoz', section='general'):
+                tdf[okey] = -tdf[okey]
+                xiport = True
         #split the column into -ve & +ve
         tdf[okey + ('+','-')[xiport]] = np.where(tdf[okey] > 0, tdf[okey], 0)
         tdf[okey + ('-','+')[xiport]] = np.where(tdf[okey] < 0, tdf[okey], 0)
@@ -1927,13 +1985,10 @@ def load_csv(datasource):
 def loaddata(datasource, altdf=False, readjust=False):
     if altdf:
         #likely not to be local datasource, so load relevant configuration file
-        print(os.getcwd())
         cfgsource = '../{}/.whtr'.format(datasource)
-        print(cfgsource)
         currentcfg = cfg.read_config( cfgsource )
         datasource = '../{}/{}'.format(datasource,
                                currentcfg['general'].get('dbname', "whtr.csv"))
-        print(datasource)
     else:
         global df
         currentcfg = cfg.config
